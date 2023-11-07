@@ -1,6 +1,6 @@
 const express = require('express')
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
 
@@ -26,12 +26,56 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+    const featureCollection = client.db('studyFeature').collection('studyCard');
+    const assignmentCollection = client.db('studyFeature').collection('assignments');
+
+
+    app.get('/studyCard', async(req, res)=>{
+        const cursor = featureCollection.find();
+        const result = await cursor.toArray();
+        res.send(result);
+    })
+
+
+    //assignment
+    app.post('/assignments', async(req, res) =>{
+      const assignment = req.body;
+      console.log(assignment)
+      const result = await assignmentCollection.insertOne(assignment)
+      res.send(result)
+    })
+    // app.get('/assignments', async(req, res) =>{
+    //   const result = await assignmentCollection.find().toArray()
+    //   res.send(result)
+    // })
+    app.get('/assignments', async(req, res) =>{
+      console.log( req.query.email)
+      let query = {};
+      if(req.query?.email){
+        query = {email: req.query.email}
+      }
+      const result = await assignmentCollection.find(query).toArray()
+      res.send(result)
+    })
+
+
+    app.delete('/assignments/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await assignmentCollection.deleteOne(query)
+      res.send(result)
+    })
+
+
+
+ // Send a ping to confirm a successful connection
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
