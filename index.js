@@ -59,6 +59,36 @@ async function run() {
     })
 
 
+
+    app.get('/assignments/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await assignmentCollection.findOne(query)
+      res.send(result)
+    })
+
+
+    app.put('/assignments/:id', async(req, res) =>{
+      const id = req.params.id;
+      const assignment = req.body;
+      // console.log(id, updateAssignment)
+      const filter = {_id: new ObjectId(id)};
+      const option = {upsert: true}
+      const updateAssignment = {
+        $set: {
+          title: assignment.title,
+          imgURL: assignment.imgURL,
+          mark: assignment.mark,
+          difficulty: assignment.difficulty,
+          discription: assignment.discription,
+          startDate: assignment.startDate
+        }
+      }
+      const result = await assignmentCollection.updateOne(filter, updateAssignment, option);
+      res.send(result)
+
+    })
+
     app.delete('/assignments/:id', async(req, res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
