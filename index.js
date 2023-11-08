@@ -94,7 +94,7 @@ async function run() {
 
 
     //assignment
-    app.post('/assignments', async(req, res) =>{
+    app.post('/assignments',logger,verifyToken, async(req, res) =>{
       const assignment = req.body;
       console.log(assignment)
       const result = await assignmentCollection.insertOne(assignment)
@@ -104,13 +104,11 @@ async function run() {
     //   const result = await assignmentCollection.find().toArray()
     //   res.send(result)
     // })
-    app.get('/assignments',logger,verifyToken, async(req, res) =>{
+    app.get('/assignments', async(req, res) =>{
       console.log( req.query.email)
       // console.log('cok cok cookie', req.cookies)
       console.log('token woner info', req.user)
-      if(req.user.email !== req.query.email){
-        return res.status(403).send({message: 'Forbidden access'})
-      }
+      
       let query = {};
       if(req.query?.email){
         query = {email: req.query.email}
@@ -122,7 +120,7 @@ async function run() {
 
 
     app.get('/assignments/:id', async(req, res) =>{
-      const id = req.params.id;
+      const id = req.params.id;      
       const query = {_id: new ObjectId(id)};
       const result = await assignmentCollection.findOne(query)
       res.send(result)
@@ -150,8 +148,11 @@ async function run() {
 
     })
 
-    app.delete('/assignments/:id', async(req, res) =>{
+    app.delete('/assignments/:id',logger,verifyToken, async(req, res) =>{
       const id = req.params.id;
+      if(req.user.email !== req.query.email){
+        return res.status(403).send({message: 'Forbidden access'})
+      }
       const query = {_id: new ObjectId(id)};
       const result = await assignmentCollection.deleteOne(query)
       res.send(result)
