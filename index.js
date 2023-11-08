@@ -31,6 +31,27 @@ const client = new MongoClient(uri, {
   }
 });
 
+//middleware
+const logger = (req, res, next) =>{
+  console.log( "log: info",req.method, req.url)
+  next()
+}
+const verifyToken = (req, res, next) =>{
+  const token = req?.cookies?.token;
+  // console.log('token in thi middle ware', token)
+  if(!token){
+    return res.status(401).send({message: 'Unauthorized access'})
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded)=>{
+    if(err){
+      return res.status(401).send({message: 'Unauthorized access'})
+    }
+    req.user = decoded;
+    next();
+  })
+  
+}
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -81,9 +102,13 @@ async function run() {
     //   const result = await assignmentCollection.find().toArray()
     //   res.send(result)
     // })
-    app.get('/assignments', async(req, res) =>{
+    app.get('/assignments',logger,verifyToken, async(req, res) =>{
       console.log( req.query.email)
-      console.log('cok cok cookie', req.cookies)
+      // console.log('cok cok cookie', req.cookies)
+      console.log('token woner info', req.user)
+      if(req.user.email !== req.query.email){
+        return res.status(403).send({message: 'Forbidden access'})
+      }
       let query = {};
       if(req.query?.email){
         query = {email: req.query.email}
